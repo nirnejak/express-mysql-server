@@ -8,9 +8,21 @@ const cookieParser = require('cookie-parser')
 const cors = require('cors')
 const mysql = require('mysql2')
 const Redis = require('ioredis')
+const s3 = require('s3')
 
 const redis = new Redis()
 const app = express()
+const connection = mysql.createConnection({
+  host: 'localhost',
+  user: 'root',
+  database: 'todoapp'
+})
+// const client = s3.createClient({
+//   s3Options: {
+//     accessKeyId: process.env.ACCESS_KEY_ID,
+//     secretAccessKey: process.env.AWS_SECRET_KEY
+//   }
+// })
 
 app.use(cors())
 app.use((req, res, next) => {
@@ -95,11 +107,6 @@ app.get('*', function (req, res) {
   res.status(404).json({ error: true, message: 'Not Found' })
 })
 
-const connection = mysql.createConnection({
-  host: 'localhost',
-  user: 'root',
-  database: 'todoapp'
-})
 app.listen(process.env.PORT, () => {
   console.log(chalk.green(`👍  Server started at PORT: ${process.env.PORT}`))
 })
