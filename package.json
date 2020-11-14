@@ -1,0 +1,43 @@
+{
+  "name": "todoapp",
+  "version": "1.0.0",
+  "description": "Dumb Todo App",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "nodemon index.js --ignore temp/",
+    "task": "node tasks/process.js",
+    "task-dev": "nodemon tasks/process.js",
+    "test": "mocha tests/index.js -timeout=10000"
+  },
+  "author": "Jitendra Nirnejak <jeetnirnejak@gmail.com> (https://nirnejak.com/)",
+  "license": "ISC",
+  "dependencies": {
+    "chalk": "^4.1.0",
+    "cookie-parser": "^1.4.5",
+    "cors": "^2.8.5",
+    "date-fns": "^2.16.1",
+    "dotenv": "^8.2.0",
+    "express": "^4.17.1",
+    "ioredis": "^4.19.2",
+    "jsonwebtoken": "^8.5.1",
+    "mysql2": "^2.2.5",
+    "redis": "^3.0.2",
+    "s3": "^4.4.0",
+    "socket.io": "^3.0.1"
+  },
+  "devDependencies": {
+    "eslint": "^7.13.0",
+    "eslint-config-prettier": "^6.15.0",
+    "eslint-config-standard": "^16.0.1",
+    "eslint-plugin-import": "^2.22.1",
+    "eslint-plugin-node": "^11.1.0",
+    "eslint-plugin-prettier": "^3.1.4",
+    "eslint-plugin-promise": "^4.2.1",
+    "husky": "^4.3.0",
+    "lint-staged": "^10.5.1",
+    "nodemon": "^2.0.6",
+    "prettier": "^2.1.2",
+    "pretty-quick": "^3.1.0"
+  }
+}
