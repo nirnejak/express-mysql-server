@@ -1,12 +1,13 @@
 require('dotenv').config()
 
+const path = require('path')
 const express = require('express')
+const fileUpload = require('express-fileupload')
 const chalk = require('chalk')
 const cookieParser = require('cookie-parser')
 const cors = require('cors')
 const mysql = require('mysql2')
 const Redis = require('ioredis')
-const { red } = require('chalk')
 
 const redis = new Redis()
 const app = express()
@@ -19,27 +20,25 @@ app.use((req, res, next) => {
 app.use(express.json())
 app.use(express.urlencoded({ extended: false }))
 app.use(cookieParser())
+app.use(express.static(path.join(__dirname, 'public')))
+app.use(fileUpload())
 
-app.get('/', (req, res) => {
-  res.send('Welcome to todo App')
-})
+app.get('/', (req, res) => res.send('Welcome to todo App'))
 
 app.get('/todo', (req, res) => {
   redis.get('todos', (err, result) => {
     if (err) {
-      res.status(500).json(err)
+      return res.status(500).send(err)
     } else {
       if (result !== null) {
-        console.log('From Cache')
         return res.json(JSON.parse(result))
       } else {
-        console.log('From Database')
         connection.query('SELECT * FROM todo;', (err, results) => {
           if (err) {
-            res.status(500).json(err)
+            return res.status(500).send(err)
           } else {
             redis.set('todos', JSON.stringify(results), 'EX', 10)
-            res.json(results)
+            return res.json(results)
           }
         })
       }
@@ -50,12 +49,12 @@ app.get('/todo', (req, res) => {
 app.get('/todo/:id', (req, res) => {
   connection.query('SELECT * FROM todo WHERE todo.id = ?;', [req.params.id], (err, results) => {
     if (err) {
-      res.status(500).json(err)
+      res.status(500).send(err)
     } else {
       if (results.length) {
-        res.json(results[0])
+        return res.json(results[0])
       } else {
-        res.status(404).json({})
+        return res.status(404).json({})
       }
     }
   })
@@ -65,13 +64,21 @@ app.post('/todo/', (req, res) => {
   if (!req.body.title) {
     res.status(400).json({ message: 'title field cannot be empty' })
   }
-  connection.query('INSERT INTO todo(title) values(?);', [req.body.title], (err, result, fields) => {
-    if (err) {
-      res.status(500).json(err)
-    }
-    res.status(200).json({
-      id: result.insertId,
-      title: req.body.title
+  const image = req.files.image
+
+  image.mv(`public/${image.name}`, (err) => {
+    if (err) { return res.status(500).send(err) }
+
+    connection.query('INSERT INTO todo(title, due_date, image) values(?, ?, ?);', [req.body.title, req.body.due_date, image.name], (err, result, fields) => {
+      if (err) {
+        return res.status(500).send(err)
+      }
+      return res.status(200).json({
+        id: result.insertId,
+        title: req.body.title,
+        due_date: req.body.due_date,
+        image: image.name
+      })
     })
   })
 })
