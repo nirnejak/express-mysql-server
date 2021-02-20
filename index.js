@@ -8,7 +8,7 @@ const cookieParser = require("cookie-parser");
 const cors = require("cors");
 const mysql = require("mysql2");
 const Redis = require("ioredis");
-// const s3 = require("s3");
+const s3 = require("s3");
 
 const redis = new Redis();
 const app = express();
@@ -17,12 +17,12 @@ const connection = mysql.createConnection({
   user: "root",
   database: "todoapp",
 });
-// const client = s3.createClient({
-//   s3Options: {
-//     accessKeyId: process.env.ACCESS_KEY_ID,
-//     secretAccessKey: process.env.AWS_SECRET_KEY
-//   }
-// })
+const client = s3.createClient({
+  s3Options: {
+    accessKeyId: process.env.ACCESS_KEY_ID,
+    secretAccessKey: process.env.AWS_SECRET_KEY,
+  },
+});
 
 app.use(cors());
 app.use((req, res, next) => {
@@ -91,21 +91,33 @@ app.post("/todo/", (req, res) => {
       return res.status(500).send(err);
     }
 
-    connection.query(
-      "INSERT INTO todo(title, due_date, image) values(?, ?, ?);",
-      [req.body.title, req.body.due_date, image.name],
-      (err, result, fields) => {
-        if (err) {
-          return res.status(500).send(err);
+    const uploader = client.uploadFile({
+      localFile: `public/${image.name}`,
+      s3Params: {
+        Bucket: "nirnejak-bucket",
+        Key: "todoapp/",
+      },
+    });
+    uploader.on("error", (err) => {
+      console.error("unable to upload:", err.stack);
+    });
+    uploader.on("end", () => {
+      connection.query(
+        "INSERT INTO todo(title, due_date, image) values(?, ?, ?);",
+        [req.body.title, req.body.due_date, image.name],
+        (err, result, fields) => {
+          if (err) {
+            return res.status(500).send(err);
+          }
+          return res.status(200).json({
+            id: result.insertId,
+            title: req.body.title,
+            due_date: req.body.due_date,
+            image: image.name,
+          });
         }
-        return res.status(200).json({
-          id: result.insertId,
-          title: req.body.title,
-          due_date: req.body.due_date,
-          image: image.name,
-        });
-      }
-    );
+      );
+    });
   });
 });
 
