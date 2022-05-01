@@ -1,6 +1,6 @@
-# GitPro
+# Todo Server
 
-[Check it out here](https://gitpro.app)
+A Todo list server, supports REST APIs and CRUD operations.
 
 **Install Dependencies**
 
